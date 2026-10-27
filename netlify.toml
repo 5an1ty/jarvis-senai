@@ -1,0 +1,15 @@
+# Import the repository in Netlify and select branch main.
+# Keep the base directory at the repository root for npm workspaces.
+[build]
+  base = "."
+  command = "npm run build"
+  publish = "apps/web/.next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Next.js routing, assets and server output are handled by the Netlify runtime.
+# Do not add a catch-all rewrite to index.html.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

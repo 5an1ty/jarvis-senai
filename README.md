@@ -72,3 +72,9 @@ A versão atual **não** oferece autenticação de produção, controle físico 
 A página inicial (`/`) apresenta o NEXUS HOME; o aplicativo web está em `/app`. Os botões de acesso abrem a residência simulada pela API existente.
 
 A seção mobile contém **“faça download aqui”**. Por padrão, o link baixa o ZIP do repositório com o projeto Expo e informa que não é um APK. Ainda não existe instalador ou publicação nas lojas. Para usar um APK hospedado ou página oficial de distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` antes de executar o build web. Use somente um endereço de distribuição verificado; variáveis `NEXT_PUBLIC_*` ficam públicas no navegador.
+
+## Publicar na Netlify
+
+O repositório inclui `netlify.toml`: conecte `5an1ty/jarvis-senai`, branch `main`, com a base na raiz. O build é `npm run build` e a publicação é `apps/web/.next` (Node 24). Não use `index.html` nem pasta `out`; o runtime Next.js cuida das rotas.
+
+O site de apresentação publica sem API. Para habilitar o painel `/app`, hospede o backend separadamente e configure `NEXT_PUBLIC_API_URL` na Netlify e `CORS_ORIGINS` na API. Em produção, nenhuma URL localhost é usada como fallback. Consulte o [guia de publicação](docs/netlify.md) para o passo a passo e a configuração do download mobile.
