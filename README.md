@@ -66,3 +66,9 @@ O smoke de navegador também valida duas sessões, comandos contextuais, sugest�
 - `docs/architecture.md`: limites, decisões e próximas fases.
 
 A versão atual **não** oferece autenticação de produção, controle físico de dispositivos, migrações relacionais completas ou todas as telas solicitadas. Consulte a arquitetura antes de expandir ou integrar hardware.
+
+## Site e download mobile
+
+A página inicial (`/`) apresenta o NEXUS HOME; o aplicativo web está em `/app`. Os botões de acesso abrem a residência simulada pela API existente.
+
+A seção mobile contém **“faça download aqui”**. Por padrão, o link baixa o ZIP do repositório com o projeto Expo e informa que não é um APK. Ainda não existe instalador ou publicação nas lojas. Para usar um APK hospedado ou página oficial de distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` antes de executar o build web. Use somente um endereço de distribuição verificado; variáveis `NEXT_PUBLIC_*` ficam públicas no navegador.
