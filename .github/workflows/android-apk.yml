@@ -28,16 +28,16 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Install JavaScript dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm ci --no-audit --no-fund 2>&1 | tee /tmp/npm-install.log
       - uses: android-actions/setup-android@v3
       - name: Install pinned Android SDK components
         run: |
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1' 2>&1 | tee /tmp/android-setup.log
       - name: Test local simulator and TypeScript
         run: |
-          npm run test:mobile
-          npm run typecheck
+          npm run test:mobile 2>&1 | tee /tmp/mobile-tests.log
+          npm run typecheck 2>&1 | tee /tmp/typecheck.log
       - name: Build unsigned ARM64 release
         working-directory: apps/mobile/android
         env:
@@ -78,11 +78,11 @@ jobs:
           BUILD_STATUS: ${{ job.status }}
         run: |
           set -euo pipefail
-          test -f /tmp/android-build.log || printf 'Native build did not start; check earlier workflow steps.\n' > /tmp/android-build.log
+          cat /tmp/npm-install.log /tmp/android-setup.log /tmp/mobile-tests.log /tmp/typecheck.log /tmp/android-build.log > /tmp/combined-build.log 2>/dev/null || true
           node -e 'require("fs").writeFileSync("/tmp/build-status.json",JSON.stringify({sourceCommit:process.env.SOURCE_COMMIT,status:process.env.BUILD_STATUS}))'
           git config user.name 'NEXUS Android Build'
           git config user.email 'android-build@users.noreply.github.com'
-          log_blob=$(git hash-object -w /tmp/android-build.log)
+          log_blob=$(git hash-object -w /tmp/combined-build.log)
           info_blob=$(git hash-object -w /tmp/build-status.json)
           tree=$(printf '100644 blob %s\tbuild-status.json\n100644 blob %s\tbuild.log\n' "$info_blob" "$log_blob" | git mktree)
           parent_args=()
