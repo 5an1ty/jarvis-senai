@@ -9,3 +9,12 @@ __pycache__/
 
 dist/
 *.tsbuildinfo
+
+# Android build outputs and private signing material
+.gradle/
+build/
+local.properties
+*.keystore
+*.jks
+.cxx/
+.externalNativeBuild/

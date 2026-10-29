@@ -1,1 +1,21 @@
-{"name":"nexus-home","private":true,"workspaces":["apps/web","apps/mobile","packages/*"],"scripts":{"dev:web":"npm run dev -w apps/web","dev:mobile":"npm run start -w apps/mobile","build":"npm run build -w apps/web","typecheck":"npm run typecheck --workspaces --if-present"},"devDependencies":{"@netlify/plugin-nextjs":"^5.16.4","playwright":"^1.62.1"}}
+{
+  "name": "nexus-home",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/mobile",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w apps/web",
+    "dev:mobile": "npm run start -w apps/mobile",
+    "build": "npm run build -w apps/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:mobile": "node --experimental-strip-types --test apps/mobile/tests/demo.test.mjs",
+    "build:apk": "bash scripts/build-android-apk.sh"
+  },
+  "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.16.4",
+    "playwright": "^1.62.1"
+  }
+}

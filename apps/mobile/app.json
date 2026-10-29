@@ -1,1 +1,24 @@
-{"expo":{"name":"NEXUS HOME","slug":"nexus-home","scheme":"nexus","plugins":["expo-router"],"ios":{"supportsTablet":true},"android":{"package":"home.nexus.app"}}}
+{
+  "expo": {
+    "name": "NEXUS HOME",
+    "slug": "nexus-home",
+    "scheme": "nexus",
+    "plugins": [
+      "expo-router"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "home.nexus.app",
+      "versionCode": 1,
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "version": "1.0.0",
+    "userInterfaceStyle": "dark"
+  }
+}
