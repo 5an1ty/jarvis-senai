@@ -1,0 +1,72 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/contracts/**'
+      - 'package-lock.json'
+      - '.github/workflows/android-apk.yml'
+permissions:
+  contents: write
+concurrency:
+  group: android-apk
+  cancel-in-progress: false
+jobs:
+  unsigned-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install JavaScript dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install pinned Android SDK components
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1'
+      - name: Test local simulator and TypeScript
+        run: |
+          npm run test:mobile
+          npm run typecheck
+      - name: Build unsigned ARM64 release
+        working-directory: apps/mobile/android
+        env:
+          CI: '1'
+          EXPO_NO_TELEMETRY: '1'
+        run: |
+          ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a \
+            -Pandroid.enableBundleCompression=true -Pexpo.useLegacyPackaging=true \
+            '-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=768m' \
+            --max-workers=2 --console=plain
+      - name: Publish unsigned build for private local signing
+        # No private signing material is stored or generated on the runner.
+        # This output branch never triggers this workflow or the production site.
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          apk=apps/mobile/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          test -s "$apk"
+          export APK_SHA256="$(sha256sum "$apk" | cut -d ' ' -f1)"
+          node -e 'require("fs").writeFileSync("/tmp/build-info.json",JSON.stringify({sourceCommit:process.env.SOURCE_COMMIT,sha256:process.env.APK_SHA256,architecture:"arm64-v8a",signed:false}))'
+          git config user.name 'NEXUS Android Build'
+          git config user.email 'android-build@users.noreply.github.com'
+          apk_blob=$(git hash-object -w "$apk")
+          info_blob=$(git hash-object -w /tmp/build-info.json)
+          tree=$(printf '100644 blob %s\tbuild-info.json\n100644 blob %s\tnexus-home-1.0.0-arm64-unsigned.apk\n' "$info_blob" "$apk_blob" | git mktree)
+          parent_args=()
+          if git ls-remote --exit-code --heads origin android-apk-output >/dev/null; then
+            git fetch origin android-apk-output
+            parent_args=(-p "$(git rev-parse FETCH_HEAD)")
+          fi
+          commit=$(printf 'Unsigned Android build for %s\n' "$SOURCE_COMMIT" | git commit-tree "$tree" "${parent_args[@]}")
+          git push origin "$commit":refs/heads/android-apk-output
