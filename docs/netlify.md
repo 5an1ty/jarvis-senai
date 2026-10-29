@@ -22,11 +22,11 @@ Não configure `output: export`, diretório `out`, nem redirecionamento SPA `/* 
 ## O que funciona sem configuração adicional
 
 - `/`: site de apresentação responsivo, recursos e seção mobile.
-- `/#mobile`: botão “faça download aqui”, por padrão para o ZIP do código-fonte Expo no GitHub.
+- `/#mobile`: botão “faça download aqui”, por padrão para o APK assinado em `/downloads/nexus-home-1.0.0-arm64.apk`. O código-fonte permanece em link separado.
 - `/app`: página de disponibilidade da central quando nenhuma API foi configurada; não faz chamadas a localhost em produção.
 - Página 404 e navegação direta pelas rotas Next.js.
 
-Não há APK ou app publicado nas lojas. Para trocar o download, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` com o endereço verificado do APK ou da distribuição mobile.
+O APK é de instalação direta para Android 7.0+ ARM64 e está incluído no repositório, junto de seu checksum. Não há publicação nas lojas nem instalador iOS. A Netlify não precisa compilar Android ou acessar a chave privada. Para substituir o download por outra distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` com o endereço verificado do APK ou da distribuição mobile.
 
 ## Habilitar o painel conectado
 

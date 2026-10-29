@@ -27,7 +27,7 @@ Abra a web na porta 3000 e escolha “Explorar residência de demonstração”.
 EXPO_PUBLIC_API_URL=http://SEU_IP_LOCAL:8000 npm run dev:mobile
 ```
 
-Abra com Expo Go compatível com SDK 53 ou um development build. Em telefone físico, localhost é o próprio telefone; use o IP da máquina que executa a API, com acesso na rede. A web e o mobile compartilham a residência simulada. App nativo ainda não validado em dispositivo: a tipagem e o bundle Android são as verificações possíveis nesta entrega.
+Para desenvolvimento, abra com Expo Go compatível com SDK 53 ou um development build. Para instalar diretamente no Android, use o APK disponível na seção mobile do site ou em `apps/web/public/downloads/nexus-home-1.0.0-arm64.apk`. Em telefone físico, localhost é o próprio telefone; use o IP da máquina que executa a API, com acesso na rede. A web e o mobile compartilham a residência simulada. O APK release foi compilado e sua assinatura verificada; ainda não houve teste de uso em aparelho físico. Ele inclui demonstração local sem internet e conexão opcional com uma API HTTPS.
 
 ### PostgreSQL e Docker
 
@@ -71,10 +71,20 @@ A versão atual **não** oferece autenticação de produção, controle físico 
 
 A página inicial (`/`) apresenta o NEXUS HOME; o aplicativo web está em `/app`. Os botões de acesso abrem a residência simulada pela API existente.
 
-A seção mobile contém **“faça download aqui”**. Por padrão, o link baixa o ZIP do repositório com o projeto Expo e informa que não é um APK. Ainda não existe instalador ou publicação nas lojas. Para usar um APK hospedado ou página oficial de distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` antes de executar o build web. Use somente um endereço de distribuição verificado; variáveis `NEXT_PUBLIC_*` ficam públicas no navegador.
+A seção mobile contém **“faça download aqui”**. Por padrão, o link baixa o **APK Android 1.0.0 assinado** para ARM64 e Android 7.0 ou superior (aproximadamente 13,3 MB). Não precisa de Expo Go. O código-fonte continua disponível em link separado. Não há publicação nas lojas nem instalador iOS. Para usar um APK hospedado ou página oficial de distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` antes de executar o build web. Use somente um endereço de distribuição verificado; variáveis `NEXT_PUBLIC_*` ficam públicas no navegador.
 
 ## Publicar na Netlify
 
 O repositório inclui `netlify.toml`: conecte `5an1ty/jarvis-senai`, branch `main`, com a base na raiz. O build é `npm run build` e a publicação é `apps/web/.next` (Node 24). Não use `index.html` nem pasta `out`; o runtime Next.js cuida das rotas.
 
 O site de apresentação publica sem API. Para habilitar o painel `/app`, hospede o backend separadamente e configure `NEXT_PUBLIC_API_URL` na Netlify e `CORS_ORIGINS` na API. Em produção, nenhuma URL localhost é usada como fallback. Consulte o [guia de publicação](docs/netlify.md) para o passo a passo e a configuração do download mobile.
+
+## APK Android
+
+O APK, o checksum SHA-256 e os metadados da versão estão em `apps/web/public/downloads`. O botão do site usa `/downloads/nexus-home-1.0.0-arm64.apk`; a Netlify publica o instalador como arquivo estático no próximo deploy da branch `main`. Se houver um override antigo em `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL`, remova-o e refaça o deploy para usar o APK incluído.
+
+No primeiro acesso ao app, escolha **Explorar demonstração sem internet**. Esse modo é explicitamente local, não controla hardware nem sincroniza com a web e reinicia os dados ao encerrar o processo. Para sincronização, informe uma API NEXUS acessível por HTTPS.
+
+A compilação no GitHub Actions terminou com sucesso, os quatro testes do simulador passaram, o APK passou em `apksigner verify` e o pacote declara Android mínimo 24/7.0, versão 1.0.0 e ABI `arm64-v8a`. Instalação em telefone físico ainda não foi validada.
+
+Veja [assinatura, instalação e reprodução do build](docs/android.md). A chave privada fica fora do repositório e precisa ser preservada com segurança para futuras atualizações.

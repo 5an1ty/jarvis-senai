@@ -13,3 +13,12 @@
 # Do not add a catch-all rewrite to index.html.
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Serve the signed Android release as a downloadable installer.
+[[headers]]
+  for = "/downloads/*.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "public, max-age=31536000, immutable"
