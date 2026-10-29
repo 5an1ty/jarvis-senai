@@ -8,6 +8,7 @@ on:
       - 'packages/contracts/**'
       - 'package-lock.json'
       - '.github/workflows/android-apk.yml'
+      - 'scripts/ci-android-sdk.sh'
 permissions:
   contents: write
 concurrency:
@@ -29,11 +30,8 @@ jobs:
           java-version: '17'
       - name: Install JavaScript dependencies
         run: npm ci --no-audit --no-fund 2>&1 | tee /tmp/npm-install.log
-      - uses: android-actions/setup-android@v3
       - name: Install pinned Android SDK components
-        run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'ndk;27.1.12297006' 'cmake;3.22.1' 2>&1 | tee /tmp/android-setup.log
+        run: bash scripts/ci-android-sdk.sh 2>&1 | tee /tmp/android-setup.log
       - name: Test local simulator and TypeScript
         run: |
           npm run test:mobile 2>&1 | tee /tmp/mobile-tests.log
