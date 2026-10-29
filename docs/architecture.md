@@ -29,3 +29,9 @@ O simulador injeta três eventos históricos de café às 15h nos três dias ant
 - Testes em dispositivos Android/iOS e teste visual automatizado; auditoria de acessibilidade e segurança.
 
 Não foram implementadas nem declaradas concluídas as sete fases completas do escopo original. Esta entrega prioriza o núcleo funcional em modo de demonstração.
+
+## Demonstração web independente
+
+`apps/web/components/residence-demo.tsx` e `apps/web/lib/residence-demo.ts` fornecem a residência local da rota `/demo`. A landing direciona o usuário para essa rota. A rota `/app` mantém a central FastAPI quando uma API está configurada e oferece a residência local quando não está. Os modos permanecem identificados como simulação.
+
+A demonstração web armazena somente os estados de duas lâmpadas, duas tomadas e quantidades dos alimentos no navegador. A lista de compras é derivada dos mínimos, sem estado duplicado. A validação de `localStorage` recupera o estado inicial quando os dados são inválidos; falhas de armazenamento mantêm o uso em memória. Eventos `storage` sincronizam abas da mesma origem. Esses dados não são compartilhados com a API, o APK ou outros aparelhos e não representam estoque físico detectado por sensores.

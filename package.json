@@ -12,7 +12,8 @@
     "build": "npm run build -w apps/web",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test:mobile": "node --experimental-strip-types --test apps/mobile/tests/demo.test.mjs",
-    "build:apk": "bash scripts/build-android-apk.sh"
+    "build:apk": "bash scripts/build-android-apk.sh",
+    "test:demo": "node scripts/demo-smoke.mjs"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.16.4",

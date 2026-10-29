@@ -1,4 +1,4 @@
-// Run against the local demo. Requires playwright in the test environment.
+// Run against the API-connected app (set NEXT_PUBLIC_API_URL before a production build). Requires playwright in the test environment.
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const {chromium}=require('playwright');
@@ -7,7 +7,7 @@ try {
  const a=await browser.newPage({viewport:{width:1440,height:1000}});
  const b=await browser.newPage({viewport:{width:390,height:844}});
  const errors=[];
- for(const p of [a,b]){p.on('pageerror',e=>errors.push(e.message));await p.goto('http://localhost:3000');await p.getByText('Explorar residência de demonstração').click();await p.getByText('Bem-vindo de volta, Alex.').waitFor();}
+ for(const p of [a,b]){p.on('pageerror',e=>errors.push(e.message));await p.goto('http://localhost:3000/app');await p.getByText('Bem-vindo de volta, Alex.').waitFor();}
  // Disable background polling to prove that updates arrive through WebSocket.
  await b.evaluate(()=>{for(let i=1;i<10000;i++)clearInterval(i)});
  await a.getByRole('button',{name:'NEXUS AI',exact:true}).click();

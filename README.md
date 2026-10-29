@@ -69,7 +69,7 @@ A versão atual **não** oferece autenticação de produção, controle físico 
 
 ## Site e download mobile
 
-A página inicial (`/`) apresenta o NEXUS HOME; o aplicativo web está em `/app`. Os botões de acesso abrem a residência simulada pela API existente.
+A página inicial (`/`) apresenta o NEXUS HOME. Os botões de acesso abrem a residência de demonstração em `/demo`, executada no próprio navegador. O aplicativo conectado à API continua em `/app`, que mostra a mesma demonstração local quando não há API configurada.
 
 A seção mobile contém **“faça download aqui”**. Por padrão, o link baixa o **APK Android 1.0.0 assinado** para ARM64 e Android 7.0 ou superior (aproximadamente 13,3 MB). Não precisa de Expo Go. O código-fonte continua disponível em link separado. Não há publicação nas lojas nem instalador iOS. Para usar um APK hospedado ou página oficial de distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` antes de executar o build web. Use somente um endereço de distribuição verificado; variáveis `NEXT_PUBLIC_*` ficam públicas no navegador.
 
@@ -77,7 +77,7 @@ A seção mobile contém **“faça download aqui”**. Por padrão, o link baix
 
 O repositório inclui `netlify.toml`: conecte `5an1ty/jarvis-senai`, branch `main`, com a base na raiz. O build é `npm run build` e a publicação é `apps/web/.next` (Node 24). Não use `index.html` nem pasta `out`; o runtime Next.js cuida das rotas.
 
-O site de apresentação publica sem API. Para habilitar o painel `/app`, hospede o backend separadamente e configure `NEXT_PUBLIC_API_URL` na Netlify e `CORS_ORIGINS` na API. Em produção, nenhuma URL localhost é usada como fallback. Consulte o [guia de publicação](docs/netlify.md) para o passo a passo e a configuração do download mobile.
+O site e a residência virtual `/demo` publicam sem API. O botão de demonstração abre `/demo`; `/app` também usa essa residência quando nenhuma API estiver configurada. Para habilitar a residência conectada em `/app`, hospede o backend separadamente e configure `NEXT_PUBLIC_API_URL` na Netlify e `CORS_ORIGINS` na API. Em produção, nenhuma URL localhost é usada como fallback. Consulte o [guia de publicação](docs/netlify.md) para o passo a passo e a configuração do download mobile.
 
 ## APK Android
 
@@ -88,3 +88,21 @@ No primeiro acesso ao app, escolha **Explorar demonstração sem internet**. Ess
 A compilação no GitHub Actions terminou com sucesso, os quatro testes do simulador passaram, o APK passou em `apksigner verify` e o pacote declara Android mínimo 24/7.0, versão 1.0.0 e ABI `arm64-v8a`. Instalação em telefone físico ainda não foi validada.
 
 Veja [assinatura, instalação e reprodução do build](docs/android.md). A chave privada fica fora do repositório e precisa ser preservada com segurança para futuras atualizações.
+
+## Residência de demonstração no site
+
+A rota `/demo` funciona na Netlify sem backend, credenciais ou acesso a dispositivos físicos. O botão **Explorar residência de demonstração** da página inicial abre essa rota.
+
+- Duas lâmpadas: ON/OFF, seis cores rápidas, seletor de cor personalizada e brilho.
+- Duas tomadas: ON/OFF e indicação de potência nominal simulada.
+- Geladeira: oito alimentos com quantidades editáveis, estoque mínimo e estados disponível, baixo ou em falta.
+- Lista de compras ao lado: calcula automaticamente a diferença entre quantidade e mínimo. Permite copiar a lista e selecionar itens para uma **reposição simulada**, que atualiza o estoque virtual.
+- Dados salvos em `localStorage`, com validação de dados, sincronização entre abas do mesmo navegador e opção **Restaurar demonstração**. Se o armazenamento estiver bloqueado, o uso continua somente na sessão. Não há sincronização dessa residência com o app Android ou com uma API.
+
+Validação de navegador, com a web rodando na porta 3000 (ou configure `DEMO_URL`):
+
+```bash
+npm run test:demo
+```
+
+O teste cobre entrada pela landing page, os quatro controles, cores, inventário, compras, cópia, reposição, persistência, sincronização entre abas, armazenamento inválido e layout responsivo. Requer Chromium, com caminho opcional em `CHROMIUM_PATH`. `scripts/smoke.mjs` continua sendo o teste separado da residência conectada à API em `/app`.

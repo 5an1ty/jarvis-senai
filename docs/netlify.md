@@ -23,7 +23,8 @@ Não configure `output: export`, diretório `out`, nem redirecionamento SPA `/* 
 
 - `/`: site de apresentação responsivo, recursos e seção mobile.
 - `/#mobile`: botão “faça download aqui”, por padrão para o APK assinado em `/downloads/nexus-home-1.0.0-arm64.apk`. O código-fonte permanece em link separado.
-- `/app`: página de disponibilidade da central quando nenhuma API foi configurada; não faz chamadas a localhost em produção.
+- `/demo`: residência interativa no navegador, com duas lâmpadas, duas tomadas, inventário da geladeira e lista de compras automática. Não requer API.
+- `/app`: usa a mesma residência local quando nenhuma API foi configurada; com `NEXT_PUBLIC_API_URL`, abre a central conectada. Nenhuma chamada a localhost é feita por padrão em produção.
 - Página 404 e navegação direta pelas rotas Next.js.
 
 O APK é de instalação direta para Android 7.0+ ARM64 e está incluído no repositório, junto de seu checksum. Não há publicação nas lojas nem instalador iOS. A Netlify não precisa compilar Android ou acessar a chave privada. Para substituir o download por outra distribuição, defina `NEXT_PUBLIC_MOBILE_DOWNLOAD_URL` com o endereço verificado do APK ou da distribuição mobile.

@@ -1,0 +1,74 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+const base = process.env.DEMO_URL || 'http://localhost:3000';
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true, args: ['--no-sandbox'] });
+try {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, permissions: ['clipboard-read', 'clipboard-write'] });
+  const page = await context.newPage();
+  const errors = [], apiRequests = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => { if (/localhost:8000|\/auth\/demo|\/home$|\/ws$/.test(request.url())) apiRequests.push(request.url()); });
+  await page.goto(base);
+  await page.getByRole('button', { name: 'Explorar residência de demonstração', exact: true }).click();
+  await page.getByRole('heading', { name: 'Sua casa, em suas mãos.' }).waitFor();
+  assert.equal(new URL(page.url()).pathname, '/demo');
+  await page.getByRole('button', { name: 'Restaurar demonstração' }).click();
+  assert.equal(await page.locator('.rd-lamp').count(), 2);
+  assert.equal(await page.locator('.rd-plug').count(), 2);
+  for (const name of ['Tomada da sala', 'Tomada do escritório', 'Lâmpada da sala', 'Lâmpada do quarto']) {
+    await page.getByRole('button', { name: `Ligar ${name}`, exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: `Ligar ${name}`, exact: true }).getAttribute('aria-pressed'), 'true');
+    await page.getByRole('button', { name: `Desligar ${name}`, exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: `Desligar ${name}`, exact: true }).getAttribute('aria-pressed'), 'true');
+  }
+  await page.getByRole('button', { name: 'Cor Roxo da Lâmpada da sala', exact: true }).click();
+  await page.getByRole('button', { name: 'Ligar Lâmpada da sala', exact: true }).click();
+  assert.equal(await page.getByTestId('lamp-living').evaluate(element => getComputedStyle(element).getPropertyValue('--light-color').trim()), '#8b5cf6');
+  await page.getByLabel('Cor personalizada da Lâmpada do quarto', { exact: true }).fill('#ff9900');
+  assert.equal(await page.getByTestId('shopping-milk').count(), 1);
+  assert.equal(await page.getByRole('button', { name: 'Diminuir Leite', exact: true }).isDisabled(), true);
+  await page.getByRole('button', { name: 'Aumentar Leite', exact: true }).click();
+  await page.getByRole('button', { name: 'Aumentar Leite', exact: true }).click();
+  await page.waitForFunction(() => !document.querySelector('[data-testid="shopping-milk"]'));
+  await page.getByRole('button', { name: 'Diminuir Leite', exact: true }).click();
+  await page.getByTestId('shopping-milk').waitFor();
+  assert.match(await page.getByTestId('shopping-milk').innerText(), /1\s*caixa/);
+  await page.getByRole('button', { name: 'Copiar lista', exact: true }).click();
+  assert.match(await page.evaluate(() => navigator.clipboard.readText()), /Leite: 1 caixa/);
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('[data-testid="lamp-living"]')?.style.getPropertyValue('--light-color') === '#8b5cf6');
+  assert.equal(await page.getByLabel('Cor personalizada da Lâmpada do quarto', { exact: true }).inputValue(), '#ff9900');
+  assert.equal(await page.getByLabel('Estoque de Leite', { exact: true }).innerText(), '1');
+  await page.getByRole('button', { name: 'A repor', exact: true }).click();
+  assert.equal(await page.getByTestId('food-apples').count(), 0);
+  await page.getByRole('button', { name: 'Todos', exact: true }).click();
+  for (const checkbox of await page.getByRole('checkbox').all()) await checkbox.check();
+  await page.getByRole('button', { name: /Simular reposição/ }).click();
+  await page.getByRole('heading', { name: 'Geladeira em dia!' }).waitFor();
+  assert.equal(await page.getByLabel('Estoque de Leite', { exact: true }).innerText(), '2');
+  const second = await context.newPage();
+  await second.goto(base + '/demo');
+  await second.getByRole('heading', { name: 'Geladeira em dia!' }).waitFor();
+  await page.getByRole('button', { name: 'Diminuir Leite', exact: true }).click();
+  await second.getByTestId('shopping-milk').waitFor();
+  await second.close();
+  await page.getByRole('button', { name: 'Restaurar demonstração' }).click();
+  for (const width of [360, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, `Horizontal overflow at ${width}px`);
+  }
+  await page.screenshot({ path: '/tmp/nexus-residence-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: '/tmp/nexus-residence-mobile.png', fullPage: true });
+  await page.goto(base + '/app');
+  await page.getByRole('heading', { name: 'Sua casa, em suas mãos.' }).waitFor();
+  const badStorage = await browser.newContext();
+  const badPage = await badStorage.newPage();
+  await badPage.addInitScript(() => localStorage.setItem('nexus-residence-demo:v1', '{invalid'));
+  await badPage.goto(base + '/demo');
+  await badPage.getByTestId('shopping-milk').waitFor();
+  await badStorage.close();
+  assert.deepEqual(errors, []);
+  assert.deepEqual(apiRequests, []);
+  console.log('PASS: entry CTA, 2 lamps/colors, 2 plugs ON/OFF, inventory/shopping, copy, restocking, persistence, tab synchronization, malformed storage, /app fallback and responsive layouts; no API calls or JS errors.');
+} finally { await browser.close(); }
