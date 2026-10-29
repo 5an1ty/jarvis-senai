@@ -47,7 +47,7 @@ jobs:
           ./gradlew :app:assembleRelease -PreactNativeArchitectures=arm64-v8a \
             -Pandroid.enableBundleCompression=true -Pexpo.useLegacyPackaging=true \
             '-Dorg.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=768m' \
-            --max-workers=2 --console=plain
+            --max-workers=2 --console=plain 2>&1 | tee /tmp/android-build.log
       - name: Publish unsigned build for private local signing
         # No private signing material is stored or generated on the runner.
         # This output branch never triggers this workflow or the production site.
@@ -71,3 +71,24 @@ jobs:
           fi
           commit=$(printf 'Unsigned Android build for %s\n' "$SOURCE_COMMIT" | git commit-tree "$tree" "${parent_args[@]}")
           git push origin "$commit":refs/heads/android-apk-output
+      - name: Publish build diagnostic status
+        if: always()
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+          BUILD_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          test -f /tmp/android-build.log || printf 'Native build did not start; check earlier workflow steps.\n' > /tmp/android-build.log
+          node -e 'require("fs").writeFileSync("/tmp/build-status.json",JSON.stringify({sourceCommit:process.env.SOURCE_COMMIT,status:process.env.BUILD_STATUS}))'
+          git config user.name 'NEXUS Android Build'
+          git config user.email 'android-build@users.noreply.github.com'
+          log_blob=$(git hash-object -w /tmp/android-build.log)
+          info_blob=$(git hash-object -w /tmp/build-status.json)
+          tree=$(printf '100644 blob %s\tbuild-status.json\n100644 blob %s\tbuild.log\n' "$info_blob" "$log_blob" | git mktree)
+          parent_args=()
+          if git ls-remote --exit-code --heads origin android-apk-status >/dev/null; then
+            git fetch origin android-apk-status
+            parent_args=(-p "$(git rev-parse FETCH_HEAD)")
+          fi
+          commit=$(printf 'Android build status for %s\n' "$SOURCE_COMMIT" | git commit-tree "$tree" "${parent_args[@]}")
+          git push origin "$commit":refs/heads/android-apk-status
